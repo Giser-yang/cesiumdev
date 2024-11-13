@@ -132,6 +132,7 @@ const initMap = (divId) => {
 onBeforeMount(() => {});
 onMounted(() => {
   const viewer = initMap("cesiumContainer");
+  window.viewer = viewer;
   window.frameCount =0;
   viewer.scene.preUpdate.addEventListener(function(){
     window.frameCount++;
@@ -159,8 +160,8 @@ onMounted(() => {
     height:50
   });
   viewer.scene.primitives.add(primitive);
-
-  console.log(" new Date().getTime()", new Date().getTime())
+ 
+  
 });
 
 watchEffect(() => {});
