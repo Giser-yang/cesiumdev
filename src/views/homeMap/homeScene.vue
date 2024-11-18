@@ -7,6 +7,7 @@ import { reactive, toRefs, onBeforeMount, onMounted, watchEffect, watch } from "
 
 import { setView, flyTo } from "@/utils/setCamera";
 import { CustomPolygonPrimitive } from "@/utils/drawPolygon";
+import createEdgeStage from "@/utils/createEdgeStage"
 import { CustomWallPrimitive } from "@/utils/drawWall";
 import areaJson from "@/assets/json/polygon.json";
 
@@ -145,24 +146,108 @@ onMounted(() => {
     pitch: -85.85092371312511,
     roll: 0,
   };
-  viewer.camera.flyTo({
-    destination: Cesium.Cartesian3.fromDegrees(options.lon, options.lat, options.height),
-    orientation: {
-      heading: Cesium.Math.toRadians(options.heading),
-      pitch: Cesium.Math.toRadians(options.pitch),
-      roll: Cesium.Math.toRadians(options.roll),
-    },
-    duration: options.duration ? options.duration : 3.0,
-  });
+  // viewer.camera.flyTo({
+  //   destination: Cesium.Cartesian3.fromDegrees(options.lon, options.lat, options.height),
+  //   orientation: {
+  //     heading: Cesium.Math.toRadians(options.heading),
+  //     pitch: Cesium.Math.toRadians(options.pitch),
+  //     roll: Cesium.Math.toRadians(options.roll),
+  //   },
+  //   duration: options.duration ? options.duration : 3.0,
+  // });
   const primitive = new CustomWallPrimitive({
     coordinates: areaJson.features[0].geometry.coordinates[0],
     altitude:550,
     height:50
   });
-  viewer.scene.primitives.add(primitive);
  
+   viewer.scene.primitives.add(primitive);
+  
+//   viewer.camera.flyToBoundingSphere(new Cesium.BoundingSphere(
+//     {
+//         "x": -1335246.0024698325,
+//         "y": 5331316.578325711,
+//         "z": 3226759.0582653405
+//     },
+//    121.74657964138467
+// ))
+console.log('primitive',primitive);  
+ setTimeout(() => {
+  console.log('primitive.boundingSphere',primitive.boundingSphere); 
+  viewer.camera.flyToBoundingSphere(primitive.boundingSphere)
+ }, 100);
+ 
+
+ //entities
+var box = viewer.entities.add({
+    position: Cesium.Cartesian3.fromDegrees(106.647382019240, 26.620452464821, 50),
+    box: {
+        dimensions: new Cesium.Cartesian3(100, 100, 100),
+        material: Cesium.Color.GREY
+    }
+})
+//拾取结果高亮
+//
+const  edgeStage = createEdgeStage()
+edgeStage.visibleEdgeColor = Cesium.Color.fromCssColorString('#a8a8e0')
+edgeStage.hiddenEdgeColor = Cesium.Color.fromCssColorString('#4d4d4d')
+edgeStage.selected = []
+edgeStage.enabled = false
+viewer.postProcessStages.add(edgeStage);
+
+const cesiumStage = Cesium.PostProcessStageLibrary.createSilhouetteStage()
+cesiumStage.enabled = false;
+viewer.postProcessStages.add(cesiumStage);
+
+ let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+handler.setInputAction(function (event) {      
+  let picked = viewer.scene.pick(event.position); 
+  edgeStage.selected = []
+    edgeStage.enabled = false
+
+    if (picked && picked.primitive) {
+        console.log('picked',picked);
+        
+        let primitive = picked.primitive
+        let pickIds = primitive._pickIds;
+        let pickId = picked.pickId;
+        console.log('pickId',pickId);
+                    edgeStage.selected = [primitive]
+            cesiumStage.selected = [primitive]
+            edgeStage.enabled = !cesiumStage.enabled
+
+        // if (!pickId && !pickIds && picked.content) {
+        //     pickIds = picked.content._model._pickIds;
+        // }
+        
+        // if (!pickId) {
+        //     if (picked.id) {
+        //         pickId = pickIds.find(pickId => {
+        //             return pickId.object == picked;
+        //         })
+        //     } else if (pickIds) {
+        //         pickId = pickIds[0]
+        //     }
+        // }
+
+        // if (pickId) {
+        //     let pickObject = {
+        //         pickId: pickId
+        //     }
+        //     edgeStage.selected = [pickObject]
+        //     cesiumStage.selected = [pickObject]
+        //     edgeStage.enabled = !cesiumStage.enabled
+        // } else {
+        //     console.log('未找到pickId')
+        // }
+
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
   
 });
+
+
 
 watchEffect(() => {});
 defineExpose({

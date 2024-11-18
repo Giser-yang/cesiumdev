@@ -4,12 +4,25 @@ class CustomWallPrimitive extends Cesium.Primitive {
         super(options)
         this.coordinates = options.coordinates;
         this.altitude = options.altitude;
-
+        this.boundingSphere;
         this.topAltitude = options.altitude + options.height;
         this._modelMatrix = options.modelMatrix || Cesium.Matrix4.IDENTITY.clone();
     }
     createCommand = (fragmeState, modelMatrix) => {
+       
         const context = fragmeState.context;
+        let pickId = this.pickId;
+        if (!pickId) {
+            pickId = context.createPickId({
+                primitive: this,
+                description: '要素描述内容',
+                //[key:string]:any
+                color:new Cesium.Color(1.0,1.0,0.0,1.0)
+            });
+            this.pickId = pickId
+        }
+        const strPickId = 'czm_pickColor';
+        const czm_pickColor = pickId.color;
         const lowPositionArray = []
         const highPositionArray = []
         const indexArray = []
@@ -27,6 +40,7 @@ class CustomWallPrimitive extends Cesium.Primitive {
             uvs.push(0, 0, 0, 1, 1, 0, 1, 1)
             i++
             if (i >= points.length) {
+
                 const positionTypedArray = new Float32Array(lowPositionArray);
                 const highPositionTypedArray = new Float32Array(highPositionArray);
                 const stTypedArray = new Float32Array(uvs);
@@ -71,7 +85,10 @@ class CustomWallPrimitive extends Cesium.Primitive {
                 const fragmentShaderSource = `
                     precision  highp  float;
                     // uniform float time;
-                    uniform float resolution;
+                    // uniform float resolution;
+
+                    uniform vec3 color;
+                    uniform vec4 ${strPickId}; 
                     in vec2 v_uv;
                     in vec4 v_positionEC;
                     void main(){
@@ -83,11 +100,12 @@ class CustomWallPrimitive extends Cesium.Primitive {
                             // if(width<0.025/resolution){
                             //     a=1.0;
                             // } 
-                            if(meters<0.4){
-                                a=1.0;
+                            if(meters<0.5){
+                                a+=0.3;
                             }
                         };
-                        out_FragColor = vec4(1.0,0.5,0.0,a);
+                         
+                        out_FragColor = vec4(color.rgb,a);
                     }
                     `
                 const attributeLocations = {
@@ -108,24 +126,32 @@ class CustomWallPrimitive extends Cesium.Primitive {
                         enabled: true
                     }
                 });
-
+ 
+                this.boundingSphere = Cesium.BoundingSphere.fromEncodedCartesianVertices(highPositionArray,lowPositionArray)
                 return new Cesium.DrawCommand({
                     modelMatrix: modelMatrix,
                     vertexArray: vertexArray,
                     shaderProgram: shaderProgram,
                     renderState: renderState,
                     pass: Cesium.Pass.TRANSLUCENT, //OPAQUE,OVERLAY,TRANSLUCENT
-                    // boundingVolume: primitive.boundingSphere,                 
+                    boundingVolume: Cesium.BoundingSphere.fromEncodedCartesianVertices(highPositionArray,lowPositionArray),                 
                     // count: indexCount,
                     primitiveType: Cesium.PrimitiveType.TRIANGLES,
                     uniformMap: {
                         // time() {
                         //     return window.frameCount % 110 / 218
                         // },
-                        resolution(){
-                            return  window.viewer.scene.canvas.height/1080;
+                        // resolution(){
+                        //     return  window.viewer.scene.canvas.height/1080;
+                        // }
+                        color(){
+                            return new Cesium.Color(1.0,0.5,0.0)
+                        },
+                        [strPickId]() {
+                            return czm_pickColor;
                         }
                     },
+                    pickId:strPickId
                 })
             }
         }
@@ -166,8 +192,39 @@ class CustomWallPrimitive extends Cesium.Primitive {
         highArray.push(newCartesian3.high.x, newCartesian3.high.y, newCartesian3.high.z)
     }
     update = (fragmeState) => {
+        if(!this.show){
+            return
+        }
         const command = this.createCommand(fragmeState, this._modelMatrix);
         fragmeState.commandList.push(command)
+    }
+    destroy(){
+        var drawCommand = this.drawCommand;
+        if (drawCommand) {
+            var va = drawCommand.vertexArray, sp = drawCommand.shaderProgram;
+            if (!va.isDestroyed()) va.destroy();
+            if (!sp.isDestroyed || !sp.isDestroyed()) {
+                sp.destroy();
+            }
+            drawCommand.isDestroyed = function returnTrue() {
+                return true
+            };
+            drawCommand.uniformMap = undefined;
+            drawCommand.renderState = Cesium.RenderState.removeFromCache(drawCommand.renderState)
+            this.drawCommand=null
+        }
+        //单个要素的pickId
+        if(this.pickId){
+            this.pickId.destroy()
+            this.pickId=null
+        }
+        //多个要素的pickId
+        if(this.pickIds){
+            this.pickIds.forEach(pickId=>{
+                pickId.destroy()
+            })
+            this.pickIds.length=0;
+        }
     }
 
 }
