@@ -7,6 +7,8 @@ import { reactive, toRefs, onBeforeMount, onMounted, watchEffect, watch } from "
 
 import { setView, flyTo } from "@/utils/setCamera";
 import { CustomPolygonPrimitive } from "@/utils/drawPolygon";
+import {PlanPrimitive} from "@/utils/drawPolygons"
+import jsonData from "@/assets/json/konggui.json"
 import createEdgeStage from "@/utils/createEdgeStage";
 import { CustomWallPrimitive } from "@/utils/drawWall";
 import areaJson from "@/assets/json/polygon.json";
@@ -155,52 +157,68 @@ onMounted(() => {
   //   },
   //   duration: options.duration ? options.duration : 3.0,
   // });
-  const primitive = new CustomWallPrimitive({
-    coordinates: areaJson.features[0].geometry.coordinates[0],
+  //墙
+  // const primitive = new CustomWallPrimitive({
+  //   coordinates: areaJson.features[0].geometry.coordinates[0],
+  //   altitude: 550,
+  //   height: 50,
+  // });
+
+  // viewer.scene.primitives.add(primitive);
+
+  // 控规
+  const planPrimitives = new PlanPrimitive({
+    features: jsonData.features,
     altitude: 550,
     height: 50,
-  });
+  })
 
-  viewer.scene.primitives.add(primitive);
-
-  //   viewer.camera.flyToBoundingSphere(new Cesium.BoundingSphere(
-  //     {
-  //         "x": -1335246.0024698325,
-  //         "y": 5331316.578325711,
-  //         "z": 3226759.0582653405
-  //     },
-  //    121.74657964138467
-  // ))
-  console.log("primitive", primitive);
+  viewer.scene.primitives.add(planPrimitives);
+  console.log("planPrimitives",planPrimitives)
+  // 飞行定位
+  // console.log("primitive", primitive);
   setTimeout(() => {
-    console.log("primitive.boundingSphere", primitive.boundingSphere);
-    viewer.camera.flyToBoundingSphere(primitive.boundingSphere);
+ 
+    viewer.camera.flyToBoundingSphere(planPrimitives.boundingSphere);
   }, 100);
 
-  //拾取结果高亮
-  const edgeStage = createEdgeStage();
-  edgeStage.visibleEdgeColor = Cesium.Color.fromCssColorString("#a8a8e0");
-  edgeStage.hiddenEdgeColor = Cesium.Color.fromCssColorString("#4d4d4d");
-  edgeStage.selected = [];
-  edgeStage.enabled = false;
-  viewer.postProcessStages.add(edgeStage);
+  // //拾取结果高亮
+  // const edgeStage = createEdgeStage();
+  // edgeStage.visibleEdgeColor = Cesium.Color.fromCssColorString("#a8a8e0");
+  // edgeStage.hiddenEdgeColor = Cesium.Color.fromCssColorString("#4d4d4d");
+  // edgeStage.selected = [];
+  // edgeStage.enabled = false;
+  // viewer.postProcessStages.add(edgeStage);
 
-  const cesiumStage = Cesium.PostProcessStageLibrary.createSilhouetteStage();
-  cesiumStage.enabled = false;
-  viewer.postProcessStages.add(cesiumStage);
+  // const cesiumStage = Cesium.PostProcessStageLibrary.createSilhouetteStage();
+  // cesiumStage.enabled = false;
+  // viewer.postProcessStages.add(cesiumStage);
 
   let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-  handler.setInputAction(function (event) {
+  // handler.setInputAction(function (event) {
+  //   let picked = viewer.scene.pick(event.position);
+  //   edgeStage.selected = [];
+  //   edgeStage.enabled = false;
+  //   if (picked && picked.primitive) {
+  //     let primitive = picked.primitive;
+  //     edgeStage.selected = [primitive];
+  //     cesiumStage.selected = [primitive];
+  //     edgeStage.enabled = !cesiumStage.enabled;
+  //   }
+  // }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+
+    handler.setInputAction(function (event) {
     let picked = viewer.scene.pick(event.position);
-    edgeStage.selected = [];
-    edgeStage.enabled = false;
+    console.log("picked",picked)
     if (picked && picked.primitive) {
       let primitive = picked.primitive;
-      edgeStage.selected = [primitive];
-      cesiumStage.selected = [primitive];
-      edgeStage.enabled = !cesiumStage.enabled;
+       
     }
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+  // 绘制控规地块
+  console.log('jsonData',jsonData.features);
+  
 });
 
 watchEffect(() => {});
