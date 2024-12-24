@@ -7,12 +7,14 @@ import { reactive, toRefs, onBeforeMount, onMounted, watchEffect, watch } from "
 
 import { setView, flyTo } from "@/utils/setCamera";
 import { CustomPolygonPrimitive } from "@/utils/drawPolygon";
-import {PlanPrimitive} from "@/utils/drawPolygons"
-import jsonData from "@/assets/json/konggui.json"
+import { PlanPrimitive } from "@/utils/drawPolygons";
+import jsonData from "@/assets/json/konggui.json";
 import createEdgeStage from "@/utils/createEdgeStage";
 import { CustomWallPrimitive } from "@/utils/drawWall";
 import areaJson from "@/assets/json/polygon.json";
-
+import { NormalPrimitive } from "@/utils/normalPrimitives";
+import { PickPrimitive } from "@/utils/drawPickPrimitive";
+import buildJson from "@/assets/json/tfxq_build.json";
 const data = reactive({});
 
 const loadCesiumLabImage = (info) => {
@@ -71,7 +73,7 @@ const initMap = (divId) => {
     // 默认地形 全球90米地形
     terrain: new Cesium.Terrain(
       Cesium.CesiumTerrainProvider.fromUrl(
-        "http://192.168.200.237:88/gis_tiles2/QuanQiu/Terrain/90m/"
+        "http://182.139.35.142:8085/Terrain/5m/Sichuan/tiles_cd/"
       )
     ),
   });
@@ -82,6 +84,12 @@ const initMap = (divId) => {
   // viewer.imageryLayers.add(new Cesium.ImageryLayer(new window.Cesium.AMapImageryProvider({ style: 'img', crs: 'WGS84' })));
   // 设置光照时间
   const utc = Cesium.JulianDate.fromDate(new Date(new Date("2024/07/04 16:00:00")));
+  viewer.scene.globe.enableLighting = true;
+  //  viewer.shadows = true;
+  //   viewer.terrainShadows = Cesium.ShadowMode.RECEIVE_ONLY;
+  //  viewer.shadowMap.darkness = 0.5; //阴影透明度--越大越透明
+  //   viewer.shadowMap.size = 4096;
+  //  viewer.shadowMap.maximumDistance = 4000;
   viewer.cesiumWidget.creditContainer.style.display = "none"; // 去除cesium图标
   viewer.scene.globe.depthTestAgainstTerrain = true;
   viewer.clockViewModel.currentTime = Cesium.JulianDate.addHours(
@@ -145,9 +153,41 @@ onMounted(() => {
     lat: 30.577713056475485,
     height: 11011.533704588906,
     heading: 0,
-    pitch: -85.85092371312511,
+    pitch: -90,
     roll: 0,
   };
+  //  //墙
+  //  const primitive1 = new CustomWallPrimitive({
+  //   coordinates: areaJson.features[0].geometry.coordinates[0],
+  //   altitude: 550,
+  //   height: 50,
+  // });
+
+  // viewer.scene.primitives.add(primitive1);
+
+  // // 建筑白膜
+  // const primitive = new NormalPrimitive({
+  //   features: buildJson.features,
+  // });
+  // viewer.scene.primitives.add(primitive);
+
+  // console.log(primitive);
+  // console.log('111',primitive.drawCommand);
+  // setTimeout(() => {
+  //   viewer.camera.flyToBoundingSphere(primitive.drawCommand._boundingVolume);
+  // }, 100);
+
+  const primitive = new PickPrimitive({
+    features: buildJson.features,
+  });
+  viewer.scene.primitives.add(primitive);
+
+  console.log(primitive);
+  // console.log('111',primitive.drawCommand);
+  setTimeout(() => {
+    viewer.camera.flyToBoundingSphere(primitive.drawCommand._boundingVolume);
+  }, 100);
+
   // viewer.camera.flyTo({
   //   destination: Cesium.Cartesian3.fromDegrees(options.lon, options.lat, options.height),
   //   orientation: {
@@ -157,42 +197,34 @@ onMounted(() => {
   //   },
   //   duration: options.duration ? options.duration : 3.0,
   // });
-  //墙
-  // const primitive = new CustomWallPrimitive({
-  //   coordinates: areaJson.features[0].geometry.coordinates[0],
+
+  // // 控规
+  // const planPrimitives = new PlanPrimitive({
+  //   features: jsonData.features,
   //   altitude: 550,
   //   height: 50,
-  // });
+  // })
 
-  // viewer.scene.primitives.add(primitive);
+  // viewer.scene.primitives.add(planPrimitives);
+  // console.log("planPrimitives",planPrimitives)
+  // // 飞行定位
+  // // console.log("primitive", primitive);
+  // setTimeout(() => {
 
-  // 控规
-  const planPrimitives = new PlanPrimitive({
-    features: jsonData.features,
-    altitude: 550,
-    height: 50,
-  })
+  //   viewer.camera.flyToBoundingSphere(planPrimitives.boundingSphere);
+  // }, 100);
 
-  viewer.scene.primitives.add(planPrimitives);
-  console.log("planPrimitives",planPrimitives)
-  // 飞行定位
-  // console.log("primitive", primitive);
-  setTimeout(() => {
- 
-    viewer.camera.flyToBoundingSphere(planPrimitives.boundingSphere);
-  }, 100);
+  //拾取结果高亮
+  const edgeStage = createEdgeStage();
+  edgeStage.visibleEdgeColor = Cesium.Color.RED;
+  edgeStage.hiddenEdgeColor = Cesium.Color.RED;
+  edgeStage.selected = [];
+  edgeStage.enabled = false;
+  viewer.postProcessStages.add(edgeStage);
 
-  // //拾取结果高亮
-  // const edgeStage = createEdgeStage();
-  // edgeStage.visibleEdgeColor = Cesium.Color.fromCssColorString("#a8a8e0");
-  // edgeStage.hiddenEdgeColor = Cesium.Color.fromCssColorString("#4d4d4d");
-  // edgeStage.selected = [];
-  // edgeStage.enabled = false;
-  // viewer.postProcessStages.add(edgeStage);
-
-  // const cesiumStage = Cesium.PostProcessStageLibrary.createSilhouetteStage();
-  // cesiumStage.enabled = false;
-  // viewer.postProcessStages.add(cesiumStage);
+  const cesiumStage = Cesium.PostProcessStageLibrary.createSilhouetteStage();
+  cesiumStage.enabled = false;
+  viewer.postProcessStages.add(cesiumStage);
 
   let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
   // handler.setInputAction(function (event) {
@@ -207,18 +239,44 @@ onMounted(() => {
   //   }
   // }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
+  //鼠标点击，拾取对象并高亮显示
+  viewer.screenSpaceEventHandler.setInputAction((e) => {
+    var mousePosition = e.position;
+    var picked = viewer.scene.pick(mousePosition);
 
-    handler.setInputAction(function (event) {
-    let picked = viewer.scene.pick(event.position);
-    console.log("picked",picked)
+    edgeStage.selected = [];
+    edgeStage.enabled = false;
+    console.log("pickId11", picked);
     if (picked && picked.primitive) {
       let primitive = picked.primitive;
-       
+      let pickIds = primitive.pickIds;
+      let pickId = picked.pickId;
+      if (!pickId && !pickIds && picked.content) {
+        pickIds = picked.content._model._pickIds;
+      }
+
+      if (!pickId) {
+        if (picked.id) {
+          pickId = pickIds.find((pickId) => {
+            return pickId.object == picked;
+          });
+        } else if (pickIds) {
+          pickId = pickIds[0];
+        }
+      }
+
+      if (pickId) {
+        let pickObject = {
+          pickId: pickId,
+        };
+        edgeStage.selected = [pickObject];
+        cesiumStage.selected = [pickObject];
+        edgeStage.enabled = !cesiumStage.enabled;
+      } else {
+        console.log("未找到pickId");
+      }
     }
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-  // 绘制控规地块
-  console.log('jsonData',jsonData.features);
-  
 });
 
 watchEffect(() => {});

@@ -8,7 +8,7 @@ class PlanPrimitive extends Cesium.Primitive {
         this.topAltitude = options.altitude + options.height;
         this._modelMatrix = options.modelMatrix || Cesium.Matrix4.IDENTITY.clone();
         this.drawCommand = null;
-        this.pickIds;
+        this.pickIds = [];
         this.pickId;
     }
     createCommand = (fragmeState, modelMatrix) => {
@@ -32,13 +32,15 @@ class PlanPrimitive extends Cesium.Primitive {
         const colors = [];
         let sequence = 0;
         let attributes = [];
+        
         for (let index = 0; index < this.features.length; index++) {
             const element = this.features[index];
             const rgb = element.properties.RGB.split(",");
             const geometry = element.geometry;
             sequence = this.setData(geometry, lowPositionArray, highPositionArray, indexArray, uvs, colors, rgb, sequence)
+            this.setPickId(element,geometry,context)
             if (index == this.features.length - 1) {
-
+                
                 const positionTypedArray = new Float32Array(lowPositionArray);
                 const highPositionTypedArray = new Float32Array(highPositionArray);
                 const stTypedArray = new Float32Array(uvs);
@@ -160,11 +162,12 @@ class PlanPrimitive extends Cesium.Primitive {
     
         //增加几何顶点属性pickColor，这里属性名称和顶点着色器里面的对应attribute变量名称一致
     
-        const ptCount = geometry.attributes.position.values.length / 3
-        let pickColors = [], { red, green, blue, alpha } = pickId.color;
-        for (let i = 0; i < ptCount; i++) {
-            pickColors.push(red, green, blue, alpha)
-        }
+        // const ptCount = geometry.attributes.position.values.length / 3
+        // let pickColors = [], { red, green, blue, alpha } = pickId.color;
+        // for (let i = 0; i < ptCount; i++) {
+        //     pickColors.push(red, green, blue, alpha)
+        // }
+        let pickColors = [[1.0,1.0,1.0,1.0]]
         pickColors = new Float32Array(pickColors);
     
         geometry.attributes.pickColor = new Cesium.GeometryAttribute({

@@ -17,7 +17,7 @@ class CustomWallPrimitive extends Cesium.Primitive {
                 primitive: this,
                 description: '要素描述内容',
                 //[key:string]:any
-                color:new Cesium.Color(1.0,1.0,0.0,1.0)
+                color:new Cesium.Color(1.0,1.0,1.0,1.0)
             });
             this.pickId = pickId
         }

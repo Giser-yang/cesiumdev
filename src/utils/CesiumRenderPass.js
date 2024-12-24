@@ -307,7 +307,7 @@ export default function CesiumRenderPass(options) {
             var is3dtiles = /texture\s?\(\s?tile_pickTexture\s?,\s?tile_featureSt\s?\)/.test(pickId)
             if (pickIdQualifier == 'varying' && !is3dtiles) {
                 czm_selectedFS += `
-varying float me_isSelected;
+in float me_isSelected;
 bool czm_selected(){
     bool isSelected= me_isSelected>0.0000001;
     if(!isSelected){
@@ -326,7 +326,7 @@ bool czm_selected(){
 
             let czm_selectedVS = cmz_selected_glsl +
                 `
-varying float me_isSelected;
+out float me_isSelected;
 bool czm_selected(){
     return czm_selected(${pickId});
 }
