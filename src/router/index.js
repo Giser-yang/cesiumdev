@@ -13,7 +13,22 @@ const routes = [
     },
     component: () => import('../views/homeMap/homeScene.vue')
   },
-  
+  {
+    path: '/webworker',
+    name: 'webworker',
+    meta: {
+      title: '异步加载',
+    },
+    component: () => import('../views/examples/webworker.vue')
+  },
+  {
+    path: '/postprocess',
+    name: 'postprocess',
+    meta: {
+      title: '后处理',
+    },
+    component: () => import('../views/examples/potProcess.vue')
+  },
 ]
 
 const router = createRouter({

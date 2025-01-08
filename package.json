@@ -10,15 +10,19 @@
   "dependencies": {
     "@turf/turf": "^7.1.0",
     "axios": "^1.7.5",
+    "cesium": "1.123",
     "core-js": "^3.8.3",
     "earcut": "^3.0.0",
     "element-plus": "^2.8.1",
+    "heatmap.js": "^2.0.5",
+    "mersenne-twister": "^1.1.0",
     "mitt": "^3.0.1",
     "sass": "^1.69.5",
     "sass-loader": "^13.3.2",
     "vue": "^3.2.13",
     "vue-router": "^4.4.3",
-    "vuex": "^4.1.0"
+    "vuex": "^4.1.0",
+    "webpack": "^5.96.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",

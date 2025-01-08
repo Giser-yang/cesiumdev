@@ -31,7 +31,7 @@
   // 加载3dtiles模型
   const addTiles = async (tileData, show) => {
     try {
-      const tileset = window.tilesetCollection.add(
+      const tileset = window.viewer.scene.primitives.add(
         await Cesium.Cesium3DTileset.fromUrl(tileData.url, {
           show: show, // 是否展示
           // shadows:ShadowMode.ENABLED,   // 阴影

@@ -76,6 +76,7 @@ const initMap = (divId) => {
         "http://182.139.35.142:8085/Terrain/5m/Sichuan/tiles_cd/"
       )
     ),
+    sceneMode:Cesium.SceneMode.MORPHING,
   });
   // viewer.scene.fxaa = false;
   viewer.scene.postProcessStages.fxaa.enabled = true;
@@ -150,7 +151,7 @@ onMounted(() => {
   });
   const options = {
     lon: 104.05088805328329,
-    lat: 30.577713056475485,
+    lat: 30.477713056475485,
     height: 11011.533704588906,
     heading: 0,
     pitch: -90,
@@ -176,27 +177,28 @@ onMounted(() => {
   // setTimeout(() => {
   //   viewer.camera.flyToBoundingSphere(primitive.drawCommand._boundingVolume);
   // }, 100);
-
+  console.time("白膜")
   const primitive = new PickPrimitive({
     features: buildJson.features,
   });
   viewer.scene.primitives.add(primitive);
-
-  console.log(primitive);
+  console.timeEnd("白膜")
   // console.log('111',primitive.drawCommand);
-  setTimeout(() => {
-    viewer.camera.flyToBoundingSphere(primitive.drawCommand._boundingVolume);
-  }, 100);
-
-  // viewer.camera.flyTo({
-  //   destination: Cesium.Cartesian3.fromDegrees(options.lon, options.lat, options.height),
-  //   orientation: {
-  //     heading: Cesium.Math.toRadians(options.heading),
-  //     pitch: Cesium.Math.toRadians(options.pitch),
-  //     roll: Cesium.Math.toRadians(options.roll),
-  //   },
-  //   duration: options.duration ? options.duration : 3.0,
-  // });
+  // setTimeout(() => {
+  //   viewer.camera.flyToBoundingSphere(primitive.drawCommand._boundingVolume);
+  // }, 100);
+  // viewer.camera.setView({
+  //   desitination:Cesium.Cartesian3.fromDegrees(104.4,30.4,1000)
+  // })
+  viewer.camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(options.lon, options.lat, options.height),
+    orientation: {
+      heading: Cesium.Math.toRadians(options.heading),
+      pitch: Cesium.Math.toRadians(options.pitch),
+      roll: Cesium.Math.toRadians(options.roll),
+    },
+    duration: options.duration ? options.duration : 3.0,
+  });
 
   // // 控规
   // const planPrimitives = new PlanPrimitive({

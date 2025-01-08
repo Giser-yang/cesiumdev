@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import './style/index.scss'
+import "./assets/css/scene.css"
 // 引入elementPlus
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';

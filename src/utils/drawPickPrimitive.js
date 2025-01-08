@@ -23,7 +23,7 @@ class PickPrimitive extends Cesium.Primitive {
         const pickColors = [];
         let sequence = 0;
         let attributes = [];
-
+        console.time("计算")
         for (let index = 0; index < this.features.length; index++) {
             const element = this.features[index];
             const geometryPickId = context.createPickId({
@@ -39,6 +39,7 @@ class PickPrimitive extends Cesium.Primitive {
             this.pickIds.push(geometryPickId)
             sequence = this.setData(element, lowPositionArray, highPositionArray, indexArray, uvs, normals,pickColors,pickColor, sequence)
             if (index == this.features.length - 1) {
+                
                 const positionTypedArray = new Float32Array(lowPositionArray);
                 const highPositionTypedArray = new Float32Array(highPositionArray);
                 const stTypedArray = new Float32Array(uvs);
@@ -161,6 +162,7 @@ class PickPrimitive extends Cesium.Primitive {
                     pickId: strPickId,
                     // instanceCount:this.features.length
                 })
+                console.timeEnd("计算")
             }
 
         }
